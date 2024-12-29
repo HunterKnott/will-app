@@ -1,6 +1,5 @@
-// will-app/server.js
 import express from "express";
-import speechToText from "./speechToText.js"; // Ensure this path is correct
+import speechToText from "./speechToText.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
