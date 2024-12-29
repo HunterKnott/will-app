@@ -1,10 +1,9 @@
+// will-app/server.js
 import express from "express";
-import speechToText from "./speechToText.js";
+import speechToText from "./speechToText.js"; // Ensure this path is correct
 
-console.log("Server set up");
-
-const port = process.env.PORT || 4000;
 const app = express();
+const port = process.env.PORT || 4000;
 
 app.use(express.json({
   limit: "50mb",
