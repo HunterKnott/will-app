@@ -1,4 +1,6 @@
-export default async function speechToText(req, res) {
+import { Request, Response } from "express";
+
+export default async function speechToText(req: Request, res: Response) {
     const data = req.body;
     const audioUrl = data?.audioUrl;
     const audioConfig = data?.config;

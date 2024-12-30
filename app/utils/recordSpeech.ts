@@ -2,11 +2,11 @@ import React, { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { Audio } from "expo-av";
 import { Platform } from "react-native";
 
-export default async function recordSpeech(
+export const recordSpeech = async(
   audioRecordingRef: MutableRefObject<Audio.Recording>,
   setIsRecording: Dispatch<SetStateAction<boolean>>,
   alreadyReceivedPermission: boolean
-): Promise<void> {
+) => {
   try {
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
@@ -70,7 +70,11 @@ export default async function recordSpeech(
       return;
     }
   } catch (err) {
-    console.error("Failed to start recording", err);
+    console.error("Failed to start recording,", err);
     return;
   }
 };
+
+export default function RecordSpeech() {
+  return null;
+}

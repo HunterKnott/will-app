@@ -3,7 +3,9 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "concurrently \"ts-node index.ts\" \"expo start\"",
+    "server": "ts-node index.ts",
+    "client": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -49,7 +51,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

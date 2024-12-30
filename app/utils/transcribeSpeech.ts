@@ -5,9 +5,9 @@ import { Platform } from "react-native";
 import * as Device from "expo-device";
 import readBlobAsBase64 from "./readBlobAsBase64";
 
-export default async function transcribeSpeech (
+export const transcribeSpeech = async (
   audioRecordingRef: MutableRefObject<Audio.Recording>
-): Promise<string | undefined> {
+) => {
   try {
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
@@ -23,7 +23,6 @@ export default async function transcribeSpeech (
       if (Platform.OS === "web") {
         const blob = await fetch(recordingUri).then((res) => res.blob());
         const foundBase64 = (await readBlobAsBase64(blob)) as string;
-        // Example: data:audio/wav;base64,asdjfioasjdfoaipsjdf
         const removedPrefixBase64 = foundBase64.split("base64,")[1];
         base64Uri = removedPrefixBase64;
       } else {
@@ -57,9 +56,12 @@ export default async function transcribeSpeech (
           Platform.OS === "android"
             ? "10.0.2.2"
             : Device.isDevice
-            ? process.env.LOCAL_DEV_IP || "localhost"
+            ? process.env.EXPO_PUBLIC_LOCAL_DEV_IP || "localhost"
             : "localhost";
         const serverUrl = `http://${rootOrigin}:4000`;
+
+        console.log(serverUrl);
+
         const serverResponse = await fetch(`${serverUrl}/speech-to-text`, {
           method: "POST",
           headers: {
@@ -89,3 +91,7 @@ export default async function transcribeSpeech (
     return undefined;
   }
 };
+
+export default function TranscribeSpeech() {
+  return null;
+}

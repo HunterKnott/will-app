@@ -16,5 +16,5 @@
     "nativewind-env.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "index.ts", "speechToText.js"  ]
+, "index.ts", "speechToText.ts"  ]
 }
