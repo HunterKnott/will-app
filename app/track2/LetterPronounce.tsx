@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
   Text,
   SafeAreaView,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
+import * as Speech from "expo-speech";
 import { Audio } from "expo-av";
 import { transcribeSpeech } from "@/app/utils/transcribeSpeech";
 import { recordSpeech } from "@/app/utils/recordSpeech";
@@ -15,6 +15,10 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import useWebFocus from "@/hooks/useWebFocus";
 
 export default function LetterPronounce() {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const [currentLetter, setCurrentLetter] = useState("");
+  const [stars, setStars] = useState(0);
+  const attemptsRef = useRef(0);
   const [transcribedSpeech, setTranscribedSpeech] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -41,6 +45,48 @@ export default function LetterPronounce() {
     }
   }, [isWebFocused]);
 
+  useEffect(() => {
+      Speech.speak("What is this letter's name?", { voice: "com.apple.ttsbundle.siri_Nicky_en-US_compact" });
+  }, []);
+
+  const pickRandomLetter = () => {
+    const randomIndex = Math.floor(Math.random() * alphabet.length);
+    setCurrentLetter(alphabet[randomIndex]);
+  };
+
+  const applyExceptions = (text: string) => {
+    const exceptions: { [key: string]: string } = {
+      "are": "R",
+      "you": "U",
+    };
+    return exceptions[text.toLowerCase()] || text;
+  }
+
+  const handleSuccess = async () => {
+    const successSound = new Audio.Sound();
+    try {
+      await successSound.loadAsync(require('@/assets/audio/right.mp3'));
+      await successSound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+
+    setStars((prev) => prev + 1);
+    attemptsRef.current += 1;
+
+    if (attemptsRef.current < 5) {
+      pickRandomLetter();
+    } else {
+      // const completionSound = new Audio.Sound();
+      // try {
+      //   await completionSound.loadAsync(require('@/assets/audio/right.mp3'));
+      //   await completionSound.playAsync();
+      // } catch(error) {
+      //   console.error("Error playing completion sound:", error);
+      // }
+    }
+  };
+
   const startRecording = async () => {
     setIsRecording(true);
     await recordSpeech(
@@ -54,8 +100,22 @@ export default function LetterPronounce() {
     setIsRecording(false);
     setIsTranscribing(true);
     try {
-      const speechTranscript = await transcribeSpeech(audioRecordingRef);
+      let speechTranscript = await transcribeSpeech(audioRecordingRef);
+      speechTranscript = applyExceptions(speechTranscript?.trim() || "");
+      const spokenText = speechTranscript?.trim().toUpperCase();
       setTranscribedSpeech(speechTranscript || "");
+
+      if (spokenText === currentLetter) {
+        handleSuccess();
+      } else {
+        const wrongSound = new Audio.Sound();
+        try {
+          await wrongSound.loadAsync(require('@/assets/audio/wrong.mp3'));
+          await wrongSound.playAsync();
+        } catch(error) {
+          console.error("Error playing wrong sound:", error);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -63,20 +123,34 @@ export default function LetterPronounce() {
     }
   };
 
+  useEffect(() => {
+    pickRandomLetter();
+  }, []);
+
   return (
     <SafeAreaView>
-      <ScrollView style={styles.mainScrollContainer}>
-        <View style={styles.mainInnerContainer}>
-          <Text style={styles.title}>Welcome to the Speech-to-Text App</Text>
-          <View style={styles.transcriptionContainer}>
+      <ScrollView className="p-5 h-full w-full">
+        <View className="gap-10 h-full items-center justify-center flex-grow">
+          <View className="flex flex-row gap-2">
+            {Array.from({ length: stars }).map((_, index) => (
+              <FontAwesome
+                key={index}
+                name="star"
+                size={24}
+                color="gold"
+              />
+            ))}
+          </View>
+          <Text className="text-9xl text-white">{currentLetter}</Text>
+          <View className="bg-gray-300 w-full h-24 p-5 mb-5 rounded-md flex flex-row items-start justify-start">
             {isTranscribing ? (
               <ActivityIndicator size="small" color="#000" />
             ) : (
               <Text
                 style={{
-                  ...styles.transcribedText,
                   color: transcribedSpeech ? "#000" : "rgb(150,150,150)",
                 }}
+                className="text-base p-1 text-left w-full"
               >
                 {transcribedSpeech ||
                   "Your transcribed text will be shown here"}
@@ -85,9 +159,9 @@ export default function LetterPronounce() {
           </View>
           <TouchableOpacity
             style={{
-              ...styles.microphoneButton,
               opacity: isRecording || isTranscribing ? 0.5 : 1,
             }}
+            className="bg-red-500 w-20 h-20 mt-24 rounded-full flex items-center justify-center"
             onPressIn={startRecording}
             onPressOut={stopRecording}
             disabled={isRecording || isTranscribing}
@@ -103,52 +177,3 @@ export default function LetterPronounce() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  mainScrollContainer: {
-    padding: 20,
-    height: "100%",
-    width: "100%",
-  },
-  mainInnerContainer: {
-    gap: 75,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    flexGrow: 1,
-  },
-  title: {
-    fontSize: 35,
-    padding: 5,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  transcriptionContainer: {
-    backgroundColor: "rgb(220,220,220)",
-    width: "100%",
-    height: 300,
-    padding: 20,
-    marginBottom: 20,
-    borderRadius: 5,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-  },
-  transcribedText: {
-    fontSize: 20,
-    padding: 5,
-    color: "#000",
-    textAlign: "left",
-    width: "100%",
-  },
-  microphoneButton: {
-    backgroundColor: "red",
-    width: 75,
-    height: 75,
-    marginTop: 100,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
