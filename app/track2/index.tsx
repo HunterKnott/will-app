@@ -1,8 +1,12 @@
 import { View, Text, TextInput, Image } from 'react-native';
-import LetterPronounce from './LetterPronounce';
+import LetterName from './LetterName';
+import LetterSound from './LetterSound';
+import SimpleWords from './SimpleWords';
 
 export default function Page() {
     return (
-        <LetterPronounce />
+        // <LetterName />
+        // <LetterSound />
+        <SimpleWords />
     );
 }

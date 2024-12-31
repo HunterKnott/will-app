@@ -49,6 +49,12 @@ export const transcribeSpeech = async (
             ? 48000
             : 41000,
         languageCode: "en-US",
+        speechContexts: [
+          {
+            // Configure this later when you're doing different transcriptions
+            phrases: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+          },
+        ],
       };
 
       if (recordingUri && dataUrl) {
@@ -59,8 +65,6 @@ export const transcribeSpeech = async (
             ? process.env.EXPO_PUBLIC_LOCAL_DEV_IP || "localhost"
             : "localhost";
         const serverUrl = `http://${rootOrigin}:4000`;
-
-        console.log(serverUrl);
 
         const serverResponse = await fetch(`${serverUrl}/speech-to-text`, {
           method: "POST",
@@ -74,9 +78,9 @@ export const transcribeSpeech = async (
 
         const results = serverResponse?.results;
         if (results) {
-          const transcript = results?.[0].alternatives?.[0].transcript;
+          const transcript = results?.[0].alternatives?.[0].transcript || "";
           if (!transcript) return undefined;
-          return transcript;
+          return transcript.trim();
         } else {
           console.error("No transcript found");
           return undefined;

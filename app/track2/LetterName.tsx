@@ -13,10 +13,12 @@ import { transcribeSpeech } from "@/app/utils/transcribeSpeech";
 import { recordSpeech } from "@/app/utils/recordSpeech";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import useWebFocus from "@/hooks/useWebFocus";
+import { useRouter } from 'expo-router';
 
-export default function LetterPronounce() {
+export default function LetterName() {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   const [currentLetter, setCurrentLetter] = useState("");
+  const [usedLetters, setUsedLetters] = useState<string[]>([]);
   const [stars, setStars] = useState(0);
   const attemptsRef = useRef(0);
   const [transcribedSpeech, setTranscribedSpeech] = useState("");
@@ -25,6 +27,7 @@ export default function LetterPronounce() {
   const isWebFocused = useWebFocus();
   const audioRecordingRef = useRef(new Audio.Recording());
   const webAudioPermissionsRef = useRef<MediaStream | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isWebFocused) {
@@ -50,14 +53,26 @@ export default function LetterPronounce() {
   }, []);
 
   const pickRandomLetter = () => {
-    const randomIndex = Math.floor(Math.random() * alphabet.length);
-    setCurrentLetter(alphabet[randomIndex]);
+    if (usedLetters.length === alphabet.length) {
+      setUsedLetters([]);
+    }
+
+    let remainingLetters = alphabet.filter(
+      (letter) => !usedLetters.includes(letter)
+    );
+
+    const randomIndex = Math.floor(Math.random() * remainingLetters.length);
+    const newLetter = remainingLetters[randomIndex];
+  
+    setUsedLetters((prev) => [...prev, newLetter]);
+    setCurrentLetter(newLetter);
   };
 
   const applyExceptions = (text: string) => {
     const exceptions: { [key: string]: string } = {
       "are": "R",
       "you": "U",
+      "why": "Y"
     };
     return exceptions[text.toLowerCase()] || text;
   }
@@ -77,13 +92,8 @@ export default function LetterPronounce() {
     if (attemptsRef.current < 5) {
       pickRandomLetter();
     } else {
-      // const completionSound = new Audio.Sound();
-      // try {
-      //   await completionSound.loadAsync(require('@/assets/audio/right.mp3'));
-      //   await completionSound.playAsync();
-      // } catch(error) {
-      //   console.error("Error playing completion sound:", error);
-      // }
+      console.log("Finished");
+      router.push('../student');
     }
   };
 
