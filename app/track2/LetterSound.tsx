@@ -49,7 +49,16 @@ export default function LetterSound() {
       }, [isWebFocused]);
 
       useEffect(() => {
-        Speech.speak("What sound does this letter make?", { voice: "com.apple.ttsbundle.siri_Nicky_en-US_compact" });
+        const playAudio = async () => {
+          const sound = new Audio.Sound();
+          try {
+            await sound.loadAsync(require('@/assets/audio/LetterSound.mp3'));
+            await sound.playAsync();
+          } catch (error) {
+            console.error("Error playing audio:", error);
+          }
+        };
+        playAudio();
     }, []);
 
     const pickRandomLetter = () => {
@@ -69,10 +78,80 @@ export default function LetterSound() {
     };
 
     const applyExceptions = (text: string) => {
-        const exceptions: { [key: string]: string } = {
-          
+        const patternExceptions: { [key: string]: { pattern: RegExp; replacement: string } } = {
+          "pf+t": { pattern: /^pf+t$/i, replacement: "f" },
+          "m+": { pattern: /^m+$/i, replacement: "m" },
+          "s+": { pattern: /^s+$/i, replacement: "s" },
+          "ps+t": { pattern: /^ps+t$/i, replacement: "s" },
+          "s+h": { pattern: /^s+h$/i, replacement: "s" },
+          "u[h]+": { pattern: /^u[h]+$/i, replacement: "u" },
+          "k[s]+": { pattern: /^k[s]+$/i, replacement: "x" },
+          "z+": { pattern: /^z+$/i, replacement: "z" }
+        }
+
+        const staticExceptions: { [key: string]: string } = {
+          "buh": "b",
+          "bye": "b",
+          "de": "d",
+          "duh": "d",
+          "爹": "d",
+          "eh": "e",
+          "끝": "g",
+          "guh": "g",
+          "heh": "h",
+          "huh": "h",
+          "え": "i",
+          "ええ": "i",
+          "aye": "i",
+          "ja": "j",
+          "jeh": "j",
+          "cheer": "j",
+          "饿": "l",
+          "la": "l",
+          "blah": "l",
+          "nuh": "n",
+          "음": "n",
+          "ねっ": "n",
+          "ah": "o",
+          "aw": "o",
+          "oh": "o",
+          "puh": "p",
+          "滚": "q",
+          "困": "q",
+          "rah": "r",
+          "ruh": "r",
+          "ugh": "r",
+          "tch": "t",
+          "uh": "u",
+          "what": "w",
         };
-        return exceptions[text.toLowerCase()] || text;
+
+        const letterNormalizations: { [key: string]: { input: string[]; output: string } }[] = [
+          { "a": { input: ["o"], output: "a" } },
+          { "c": { input: ["k", "ㅋ", "看"], output: "c" } },
+          { "j": { input: ["yeah"], output: "j" } },
+          { "k": { input: ["c", "ㅋ", "看"], output: "k" } },
+          { "y": { input: ["j", "yeah"], output: "y" } }
+        ];
+
+        const lowercaseText = text.toLowerCase();
+        if (currentLetter) {
+          const normalization = letterNormalizations.find(norm => currentLetter in norm);
+          if (normalization) {
+              const { input, output } = normalization[currentLetter];
+              if (input.includes(lowercaseText)) {
+                  return output;
+              }
+          }
+        }
+
+        for (const [_, { pattern, replacement }] of Object.entries(patternExceptions)) {
+          if (pattern.test(lowercaseText)) {
+            return replacement;
+          }
+        }
+
+        return staticExceptions[lowercaseText] || text;
     };
 
     const handleSuccess = async () => {
@@ -111,7 +190,9 @@ export default function LetterSound() {
           let speechTranscript = await transcribeSpeech(audioRecordingRef);
           speechTranscript = applyExceptions(speechTranscript?.trim() || "").toLowerCase();
           const spokenText = speechTranscript?.trim().toLowerCase();
-          setTranscribedSpeech(speechTranscript || "");
+          setTranscribedSpeech(spokenText);
+
+          console.log(spokenText);
     
           if (spokenText === currentLetter) {
             handleSuccess();

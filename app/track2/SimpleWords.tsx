@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 
 const WORD_BANKS = [
     ["Bat", "Cat", "Hat", "Mat", "Pat", "Sat", "Cab", "Lab", "Tab", "Cap", "Map", "Nap", "Zap", "Can", "Fan", "Man", "Pan", "Ran", "Tan", "Van", "Max", "Tax", "Wax", "Bag", "Rag"],
-    ["Bed", "Fed", "Red", "Bet", "Get", "Jet", "Let", "Met", "Net", "Pet", "Set", "Vet", "Wet", "Yet", "Den", "Hen", "Men", "Pen", "Ten", "Zen", "Beg", "Leg", "Peg", "Yes", "Ref"],
+    ["Bed", "Fed", "Led", "Red", "Bet", "Get", "Jet", "Let", "Met", "Net", "Pet", "Set", "Vet", "Wet", "Yet", "Den", "Hen", "Men", "Pen", "Ten", "Zen", "Beg", "Leg", "Peg", "Yes"],
     ["Big", "Dig", "Fig", "Pig", "Bin", "Fin", "Pin", "Win", "Bit", "Fit", "Hit", "Lit", "Pit", "Sit", "Lip", "Tip", "Dip", "Sip", "Mix", "Fix", "Six", "Dim", "Him", "Hid", "Kid"],
     ["Cog", "Dog", "Fog", "Hog", "Jog", "Log", "Box", "Fox", "Bot", "Cot", "Dot", "Got", "Hot", "Lot", "Not", "Pot", "Hop", "Mop", "Pop", "Top", "Fob", "Job", "Mob", "Rob", "Sob"],
     ["Bug", "Dug", "Hug", "Mug", "Pug", "Rug", "Tug", "Bus", "But", "Cut", "Gut", "Hut", "Mut", "Nut", "Rut", "Bun", "Fun", "Run", "Sun", "Gum", "Hum", "Sum", "Mud", "Rub", "Tub"],
@@ -56,7 +56,16 @@ export default function SimpleWords() {
       }, [isWebFocused]);
 
       useEffect(() => {
-        Speech.speak("Say the word out loud.", { voice: "com.apple.ttsbundle.siri_Nicky_en-US_compact" });
+        const playAudio = async () => {
+          const sound = new Audio.Sound();
+          try {
+            await sound.loadAsync(require('@/assets/audio/SimpleWords.mp3'));
+            await sound.playAsync();
+          } catch (error) {
+            console.error("Error playing audio:", error);
+          }
+        };
+        playAudio();
     }, []);
 
     const pickRandomWord = () => {
@@ -78,6 +87,20 @@ export default function SimpleWords() {
         setUsedWords((prev) => [...prev, newWord]);
         setCurrentWord(newWord);
     };
+
+    const applyExceptions = (text: string) => {
+      const exceptions: { [key: string]: string } = {
+        "10": "ten",
+        "finn": "fin",
+        "6": "six",
+        "caught": "cot",
+        "doug": "dug",
+        "some": "sum",
+        "mutt": "mut",
+        "matt": "mat",
+      };
+      return exceptions[text.toLowerCase()] || text;
+    }
     
     const handleSuccess = async () => {
         const successSound = new Audio.Sound();
@@ -113,7 +136,7 @@ export default function SimpleWords() {
         setIsTranscribing(true);
         try {
             let speechTranscript = await transcribeSpeech(audioRecordingRef);
-            speechTranscript = speechTranscript?.trim()?.toLowerCase() || "";
+            speechTranscript = applyExceptions(speechTranscript?.trim()?.toLowerCase() || "");
             setTranscribedSpeech(speechTranscript);
     
           if (speechTranscript === currentWord.toLowerCase()) {

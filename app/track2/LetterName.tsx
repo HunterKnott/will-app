@@ -49,7 +49,16 @@ export default function LetterName() {
   }, [isWebFocused]);
 
   useEffect(() => {
-      Speech.speak("What is this letter's name?", { voice: "com.apple.ttsbundle.siri_Nicky_en-US_compact" });
+      const playAudio = async () => {
+        const sound = new Audio.Sound();
+        try {
+          await sound.loadAsync(require('@/assets/audio/LetterName.mp3'));
+          await sound.playAsync();
+        } catch (error) {
+          console.error("Error playing audio:", error);
+        }
+      };
+      playAudio();
   }, []);
 
   const pickRandomLetter = () => {
@@ -70,7 +79,15 @@ export default function LetterName() {
 
   const applyExceptions = (text: string) => {
     const exceptions: { [key: string]: string } = {
+      "bee": "B",
+      "sea": "C",
+      "gee": "G",
+      "aye": "I",
+      "jay": "J",
+      "pea": "P",
+      "pee": "P",
       "are": "R",
+      "tea": "T",
       "you": "U",
       "why": "Y"
     };
@@ -111,7 +128,7 @@ export default function LetterName() {
     setIsTranscribing(true);
     try {
       let speechTranscript = await transcribeSpeech(audioRecordingRef);
-      speechTranscript = applyExceptions(speechTranscript?.trim() || "");
+      speechTranscript = applyExceptions(speechTranscript?.trim().toLowerCase() || "");
       const spokenText = speechTranscript?.trim().toUpperCase();
       setTranscribedSpeech(speechTranscript || "");
 

@@ -6,7 +6,7 @@ import SimpleWords from './SimpleWords';
 export default function Page() {
     return (
         // <LetterName />
-        // <LetterSound />
-        <SimpleWords />
+        <LetterSound />
+        // <SimpleWords />
     );
 }
