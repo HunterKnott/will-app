@@ -55,18 +55,27 @@ export default function SimpleWords() {
         }
       }, [isWebFocused]);
 
-      useEffect(() => {
-        const playAudio = async () => {
-          const sound = new Audio.Sound();
-          try {
-            await sound.loadAsync(require('@/assets/audio/SimpleWords.mp3'));
-            await sound.playAsync();
-          } catch (error) {
-            console.error("Error playing audio:", error);
-          }
-        };
-        playAudio();
-    }, []);
+  useEffect(() => {
+    const playAudio = async () => {
+      try {
+        // Set audio mode for playback
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,  // Changed to false
+          shouldDuckAndroid: false,
+          playThroughEarpieceAndroid: false,
+          allowsRecordingIOS: false,  // Added this
+        });
+
+        const sound = new Audio.Sound();
+        await sound.loadAsync(require('@/assets/audio/SimpleWords.mp3'));
+        await sound.playAsync();
+      } catch (error) {
+        console.error("Error playing audio:", error);
+      }
+    };
+    playAudio();
+  }, []);
 
     const pickRandomWord = () => {
         const wordListIndex = attemptsRef.current;
@@ -103,24 +112,33 @@ export default function SimpleWords() {
     }
     
     const handleSuccess = async () => {
-        const successSound = new Audio.Sound();
-        try {
-            await successSound.loadAsync(require('@/assets/audio/right.mp3'));
-            await successSound.playAsync();
-        } catch (error) {
-            console.error("Error playing sound:", error);
-        }
+      try {
+          // Set audio mode for playback
+          await Audio.setAudioModeAsync({
+              playsInSilentModeIOS: true,
+              staysActiveInBackground: false,
+              shouldDuckAndroid: false,
+              playThroughEarpieceAndroid: false,
+              allowsRecordingIOS: false,
+          });
 
-        setStars((prev) => prev + 1);
-        attemptsRef.current += 1;
-    
-        if (attemptsRef.current < WORD_BANKS.length) {
+          const successSound = new Audio.Sound();
+          await successSound.loadAsync(require('@/assets/audio/right.mp3'));
+          await successSound.playAsync();
+      } catch (error) {
+          console.error("Error playing sound:", error);
+      }
+
+      setStars((prev) => prev + 1);
+      attemptsRef.current += 1;
+  
+      if (attemptsRef.current < WORD_BANKS.length) {
           pickRandomWord();
-        } else {
+      } else {
           console.log("Finished");
           router.push('../student');
-        }
-    };
+      }
+  };
 
     const startRecording = async () => {
         setIsRecording(true);
@@ -132,30 +150,39 @@ export default function SimpleWords() {
     };
 
     const stopRecording = async () => {
-        setIsRecording(false);
-        setIsTranscribing(true);
-        try {
-            let speechTranscript = await transcribeSpeech(audioRecordingRef);
-            speechTranscript = applyExceptions(speechTranscript?.trim()?.toLowerCase() || "");
-            setTranscribedSpeech(speechTranscript);
-    
+      setIsRecording(false);
+      setIsTranscribing(true);
+      try {
+          let speechTranscript = await transcribeSpeech(audioRecordingRef);
+          speechTranscript = applyExceptions(speechTranscript?.trim()?.toLowerCase() || "");
+          setTranscribedSpeech(speechTranscript);
+  
           if (speechTranscript === currentWord.toLowerCase()) {
-            handleSuccess();
+              handleSuccess();
           } else {
-            const wrongSound = new Audio.Sound();
-            try {
-              await wrongSound.loadAsync(require('@/assets/audio/wrong.mp3'));
-              await wrongSound.playAsync();
-            } catch(error) {
-              console.error("Error playing wrong sound:", error);
-            }
+              // Set audio mode for playback
+              await Audio.setAudioModeAsync({
+                  playsInSilentModeIOS: true,
+                  staysActiveInBackground: false,
+                  shouldDuckAndroid: false,
+                  playThroughEarpieceAndroid: false,
+                  allowsRecordingIOS: false,
+              });
+
+              const wrongSound = new Audio.Sound();
+              try {
+                  await wrongSound.loadAsync(require('@/assets/audio/wrong.mp3'));
+                  await wrongSound.playAsync();
+              } catch(error) {
+                  console.error("Error playing wrong sound:", error);
+              }
           }
-        } catch (e) {
+      } catch (e) {
           console.error(e);
-        } finally {
+      } finally {
           setIsTranscribing(false);
-        }
-    };
+      }
+  };
 
     useEffect(() => {
         pickRandomWord();

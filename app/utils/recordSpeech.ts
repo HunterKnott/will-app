@@ -11,6 +11,9 @@ export const recordSpeech = async(
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
       playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
     });
     const doneRecording = audioRecordingRef?.current?._isDoneRecording;
     if (doneRecording) audioRecordingRef.current = new Audio.Recording();
